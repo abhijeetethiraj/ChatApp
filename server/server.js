@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./lib/db");
 const http = require("http");
 const cors = require("cors");
+const mongoose = require("mongoose"); // for connection state
 const userRoutes = require("./routes/userRoutes");
 const messagesRoutes = require("./routes/MessageRoutes");
 const { initSocket } = require("./lib/socketio");
@@ -17,12 +18,37 @@ if (process.env.NODE_ENV !== "production") {
   initSocket(server);
 }
 
+// connect database
 connectDB();
 
 app.use(express.json({ limit: "4mb" }));
 app.use(cors());
 
-app.get("/api/status", (req, res) => res.send("✅ Server is live"));
+// ✅ Status route with DB check
+app.get("/api/status", async (req, res) => {
+  let dbStatus = "❌ Disconnected";
+
+  switch (mongoose.connection.readyState) {
+    case 0:
+      dbStatus = "❌ Disconnected";
+      break;
+    case 1:
+      dbStatus = "✅ Connected";
+      break;
+    case 2:
+      dbStatus = "⏳ Connecting...";
+      break;
+    case 3:
+      dbStatus = "⚠️ Disconnecting...";
+      break;
+  }
+
+  res.json({
+    server: "✅ Server is live",
+    database: dbStatus,
+  });
+});
+
 app.use("/api/auth", userRoutes);
 app.use("/api/messages", messagesRoutes);
 
