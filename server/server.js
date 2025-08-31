@@ -25,6 +25,9 @@ app.get("/api/status", (req, res) => res.send("✅ Server is live"));
 app.use("/api/auth", userRoutes);
 app.use("/api/messages", messagesRoutes);
 
+if(process.env.NODE_ENV !=="production"){
 server.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 );
+}
+
