@@ -12,22 +12,28 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-const io = initSocket(server);
+// Initialize socket only if not on Vercel (since Vercel doesn’t support WebSockets natively)
+if (process.env.NODE_ENV !== "production") {
+  initSocket(server);
+}
 
 connectDB();
 
 app.use(express.json({ limit: "4mb" }));
 app.use(cors());
 
-const PORT = process.env.PORT || 5000;
-
 app.get("/api/status", (req, res) => res.send("✅ Server is live"));
 app.use("/api/auth", userRoutes);
 app.use("/api/messages", messagesRoutes);
 
-if(process.env.NODE_ENV !=="production"){
-server.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-);
+const PORT = process.env.PORT || 5000;
+
+// Local development
+if (process.env.NODE_ENV !== "production") {
+  server.listen(PORT, () =>
+    console.log(`🚀 Server running on http://localhost:${PORT}`)
+  );
 }
 
+// 👉 Export the app (not server) for Vercel
+module.exports = app;
